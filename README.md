@@ -1,58 +1,58 @@
-# Sistema Distribuído de Indexação e Pesquisa de Páginas Web
+# Distributed Web Page Indexing and Search System
 
-Sistema distribuído de indexação e pesquisa web implementado em Java com RMI (Remote Method Invocation). O sistema é composto por múltiplos componentes que trabalham de forma coordenada para indexar páginas web e permitir pesquisas eficientes.
+A distributed web indexing and search system implemented in Java using RMI (Remote Method Invocation). The system consists of multiple components that work together to index and search web pages in a coordinated and distributed manner.
 
 ---
 
-## Requisitos
+## Requirements
 
-- **Java JDK 11 ou superior**
+- **Java JDK 11 or higher**
 - **Maven 3.6+**
-- **Sistema Operacional:** macOS, Linux ou Windows
-- **Conexão à Internet** (para indexação de páginas web)
+- **Operating System:** macOS, Linux, or Windows
+- **Internet connection** (for indexing web pages)
 
 ---
 
-##  Instalação
+## Installation
 
-### 1. Clonar o repositório
+### 1. Clone the repository
 ```bash
-git clone <url-do-repositório>
+git clone <repository-url>
 cd SD_Project
 ```
 
-### 2. Compilar o projeto
+### 2. Compile the project
 ```bash
 make clean
 ```
-Ou usando Maven diretamente:
+Or using Maven directly:
 ```bash
 mvn clean compile
 ```
 
 ---
 
-## Execução
+## Running the System
 
-### Opção 1: Executar todos os componentes automaticamente
+### Option 1: Run all components automatically
 ```bash
 make run-backend
 ```
-Este comando inicia todos os componentes do sistema na seguinte ordem:
-1. Gateway (porta padrão: 8183)
-2. URL Queue (porta padrão: 8181)
-3. Barrel 1 (porta padrão: 8186)
-4. Barrel 2 (porta padrão: 8182)
+This command starts all system components in the following order:
+1. Gateway (default port: 8183)
+2. URL Queue (default port: 8181)
+3. Barrel 1 (default port: 8186)
+4. Barrel 2 (default port: 8182)
 5. Downloader
 6. Client
 
-### Opção 2: Executar componentes individualmente
+### Option 2: Run components individually
 
 #### Gateway
 ```bash
 make run-g
 ```
-Ou com argumentos:
+Or with arguments:
 ```bash
 java -cp target/classes gateway.Gateway <port> <name> <host>
 ```
@@ -61,7 +61,7 @@ java -cp target/classes gateway.Gateway <port> <name> <host>
 ```bash
 make run-q
 ```
-Ou com argumentos:
+Or with arguments:
 ```bash
 java -cp target/classes queue.URLQueue <port> <name> <host>
 ```
@@ -71,7 +71,7 @@ java -cp target/classes queue.URLQueue <port> <name> <host>
 make run-b1    # Barrel 1
 make run-b2    # Barrel 2
 ```
-Ou com argumentos:
+Or with arguments:
 ```bash
 java -cp target/classes barrel.IndexStorageBarrel <port> <name> <host>
 ```
@@ -80,7 +80,7 @@ java -cp target/classes barrel.IndexStorageBarrel <port> <name> <host>
 ```bash
 make run-d
 ```
-Ou com argumentos:
+Or with arguments:
 ```bash
 java -cp target/classes downloader.Downloader <gatewayPort> <queuePort> <gatewayHost> <queueHost>
 ```
@@ -89,7 +89,7 @@ java -cp target/classes downloader.Downloader <gatewayPort> <queuePort> <gateway
 ```bash
 make run-c
 ```
-Ou com argumentos:
+Or with arguments:
 ```bash
 java -cp target/classes client.Client <gatewayPort> <gatewayHost>
 ```
@@ -98,23 +98,23 @@ java -cp target/classes client.Client <gatewayPort> <gatewayHost>
 ```bash
 make run-api
 ```
-A API estará disponível em `http://localhost:8080`
+The API will be available at `http://localhost:8080`.
 
-**Endpoints principais:**
-- `GET/POST /api/search?q=query` - Pesquisar
-- `GET /api/barrels/active` - Barrels ativos
+**Main endpoints:**
+- `GET/POST /api/search?q=query` - Search
+- `GET /api/barrels/active` - Active barrels
 - `GET /api/health` - Health check
 
 ---
 
-## Configuração
+## Configuration
 
-As configurações padrão podem ser alteradas no arquivo:
+The default settings can be changed in:
 ```
 src/main/resources/Config.properties
 ```
 
-### Exemplo de configuração:
+### Configuration example
 ```properties
 # Gateway
 gateway.host=127.0.0.1
@@ -132,11 +132,11 @@ barrel1.port=8186
 barrel1.name=barrel1
 ```
 
-**Nota:** Se forem fornecidos argumentos na linha de comandos, estes têm prioridade sobre as configurações do ficheiro.
+**Note:** If command-line arguments are provided, they take precedence over the settings in the configuration file.
 
 ---
 
-## Parar o Sistema
+## Stopping the System
 
 ### macOS/Linux:
 ```bash
@@ -144,235 +144,238 @@ make stop-backend
 ```
 
 ### Windows:
-Fechar manualmente cada terminal ou usar `Ctrl+C` em cada janela.
+Close each terminal manually or use `Ctrl+C` in each window.
 
 ---
 
-## Arquitetura do Sistema
+## System Architecture
 
-### Componentes
+### Components
 
-#### 1. **Gateway** (Porta de entrada)
-- Ponto central de comunicação do sistema
-- Faz load balancing entre os barrels ativos
-- Gere failover automático de barrels
-- Agrega resultados de pesquisa de múltiplos barrels
-- Mantém estatísticas do sistema
+#### 1. **Gateway** (Entry point)
+- Central communication point for the system
+- Performs load balancing between active barrels
+- Manages automatic barrel failover
+- Aggregates search results from multiple barrels
+- Maintains system statistics
 
-#### 2. **Index Storage Barrels** (Armazenamento distribuído)
-- Armazenam o índice invertido (palavra → URLs)
-- Sincronizam dados entre si automaticamente
-- Removem stop words de forma dinâmica usando IQR (Interquartile Range)
-- Guardam progresso em disco para recuperação após falhas
-- Podem ser adicionados/removidos dinamicamente
+#### 2. **Index Storage Barrels** (Distributed storage)
+- Store the inverted index (word → URLs)
+- Automatically synchronize data with one another
+- Dynamically remove stop words using IQR (Interquartile Range)
+- Store progress on disk for recovery after failures
+- Can be added or removed dynamically
 
-#### 3. **Downloader** (Workers de indexação)
-- Descarregam páginas web e extraem conteúdo
-- Tokenizam texto e enviam palavras para os barrels
-- Extraem links e adicionam à fila de URLs
-- Processam páginas de forma assíncrona
-- Suportam retry automático em caso de erro
+#### 3. **Downloader** (Indexing workers)
+- Download web pages and extract their content
+- Tokenize text and send words to the barrels
+- Extract links and add them to the URL queue
+- Process pages asynchronously
+- Support automatic retries in case of errors
 
-#### 4. **URL Queue** (Fila de URLs)
-- Gere URLs a processar (BlockingDeque)
-- Evita URLs duplicados
-- Persiste estado em barrels ao encerrar
-- Suporta priorização de URLs
+#### 4. **URL Queue**
+- Manages URLs to be processed (`BlockingDeque`)
+- Prevents duplicate URLs
+- Persists its state to barrels when shutting down
+- Supports URL prioritization
 
-#### 5. **Client** (Interface do utilizador)
-- Interface de linha de comandos
-- Permite pesquisas por uma ou múltiplas palavras
-- Mostra páginas ordenadas por relevância
-- Permite adicionar URLs manualmente
-- Exibe estatísticas do sistema
+#### 5. **Client** (User interface)
+- Command-line interface
+- Allows searches for one or multiple words
+- Displays pages ordered by relevance
+- Allows users to add URLs manually
+- Displays system statistics
 
-#### 6. **Spring Boot REST API** (Interface Web)
-- API REST para integração com frontend React
-- Endpoints JSON para pesquisa e gestão
-- CORS habilitado para desenvolvimento local
-- Health checks e monitorização
-- Porta padrão: 8080
-
----
-
-## Funcionalidades
-
-### Pesquisa
-- **Pesquisa por palavra única:** Retorna todos os URLs que contêm a palavra
-- **Pesquisa por múltiplas palavras:** Retorna URLs que contêm TODAS as palavras (interseção)
-- **Ordenação por referências:** Resultados ordenados pelo número de links recebidos (popularidade)
-- **Informação detalhada:** Título, URL, descrição (snippet) de cada página
-
-### Indexação
-- **Indexação distribuída:** Múltiplos barrels processam em paralelo
-- **Stop words dinâmicas:** Remoção automática de palavras muito comuns usando IQR
-- **Persistência:** Índices guardados em disco automaticamente
-- **Sincronização:** Novos barrels recebem dados dos existentes
-
-### Estatísticas
-- Número de barrels ativos
-- Tamanho do índice de cada barrel
-- Tempo médio de resposta por barrel
-- Top 10 pesquisas mais realizadas
-- Páginas mais referenciadas
+#### 6. **Spring Boot REST API** (Web interface)
+- REST API for integration with a React frontend
+- JSON endpoints for search and management
+- CORS enabled for local development
+- Health checks and monitoring
+- Default port: 8080
 
 ---
 
-## Exemplo de Uso
+## Features
 
-### 1. Iniciar o sistema
+### Search
+- **Single-word search:** Returns all URLs containing the word
+- **Multiple-word search:** Returns URLs containing ALL words (intersection)
+- **Reference-based sorting:** Results are sorted by the number of incoming links (popularity)
+- **Detailed information:** Title, URL, and description (snippet) for each page
+
+### Indexing
+- **Distributed indexing:** Multiple barrels process pages in parallel
+- **Dynamic stop words:** Automatic removal of very common words using IQR
+- **Persistence:** Indexes are automatically saved to disk
+- **Synchronization:** New barrels receive data from existing barrels
+
+### Statistics
+- Number of active barrels
+- Index size for each barrel
+- Average response time per barrel
+- Top 10 most frequent searches
+- Most referenced pages
+
+---
+
+## Usage Example
+
+### 1. Start the system
 ```bash
 make run-backend
 make run-api
 ```
 
-### 2. No Client, escolher uma opção do menu:
+### 2. Choose an option from the Client menu:
 ```
 CLIENT MENU
 ============================================
-1. Adicionar URL para indexar
-2. Procurar uma palavra
-3. Ver estatísticas
-4. Consultar lista de ligações de uma página
-0. Sair
+1. Add URL for indexing
+2. Search for a word
+3. View statistics
+4. View the list of links for a page
+0. Exit
 ============================================
 ```
 
-### 3. Adicionar URL para indexar:
+### 3. Add a URL for indexing:
 ```
-Escolha uma opção (1-5): 1
-Digite o URL (http:// ou https://): https://pt.wikipedia.org/wiki/Java
-URL adicionado à fila com sucesso!
-```
-
-### 4. Pesquisar palavras:
-```
-Escolha uma opção (1-5): 2
-Palavra(s) a pesquisar: java programação
-Encontrados 42 resultado(s) para: [java, programação]
-------------------------------------------------------------
-[1] - 15 Referência(s)
-Java (linguagem de programação)
-URL: https://pt.wikipedia.org/wiki/Java_(linguagem_de_programação)
-    Java é uma linguagem de programação orientada a objetos...
-------------------------------------------------------------
+Choose an option (1-5): 1
+Enter the URL (http:// or https://): https://en.wikipedia.org/wiki/Java
+URL successfully added to the queue!
 ```
 
-### 5. Ver estatísticas:
+### 4. Search for words:
+```
+Choose an option (1-5): 2
+Word(s) to search: java programming
+Found 42 result(s) for: [java, programming]
+------------------------------------------------------------
+[1] - 15 Reference(s)
+Java (programming language)
+URL: https://en.wikipedia.org/wiki/Java_(programming_language)
+    Java is a high-level, class-based, object-oriented programming language...
+------------------------------------------------------------
+```
+
+### 5. View statistics:
 ```
 ==================================================
-Escolha uma opção (1-5): 3
+Choose an option (1-5): 3
 
-TOP 10 PESQUISAS
+TOP 10 SEARCHES
 ------------------------------
-Ainda não há pesquisas registradas
+No searches have been recorded yet
 
-BARRELS ATIVOS
+ACTIVE BARRELS
 ------------------------------
-Barrel Ativo -> barrel1
-Porta: 8182
+Active Barrel -> barrel1
+Port: 8182
 Host: 127.0.0.1
-Índice: 0
+Index: 0
 
-Barrel Ativo -> barrel2
-Porta: 8184
+Active Barrel -> barrel2
+Port: 8184
 Host: 127.0.0.1
-Índice: 0
+Index: 0
 
 
-BARRELS REGISTRADOS
+REGISTERED BARRELS
 ------------------------------
-Barrel Registrado -> barrel2:8184:127.0.0.1
-Barrel Registrado -> barrel1:8182:127.0.0.1
+Registered Barrel -> barrel2:8184:127.0.0.1
+Registered Barrel -> barrel1:8182:127.0.0.1
 
-TEMPO MÉDIO DE RESPOSTA POR BARREL
+AVERAGE RESPONSE TIME PER BARREL
 ------------------------------
-Nenhum tempo de resposta registrado.
+No response time recorded.
 ...
 ```
 
 ---
 
-## Estrutura de Ficheiros
+## File Structure
 
 ```
 SD_Project/
 ├── src/main/java/
-│   ├── barrel/              # Lógica dos barrels
-│   ├── client/              # Interface do cliente
-│   ├── common/              # Classes partilhadas (Utils, Config, etc.)
-│   ├── downloader/          # Workers de indexação
-│   ├── gateway/             # Gateway e conexões
-│   └── queue/               # Fila de URLs
+│   ├── barrel/              # Barrel logic
+│   ├── client/              # Client interface
+│   ├── common/              # Shared classes (Utils, Config, etc.)
+│   ├── downloader/          # Indexing workers
+│   ├── gateway/             # Gateway and connections
+│   └── queue/               # URL queue
 ├── src/main/resources/
-│   └── Config.cfg           # Configurações do sistema
-├── Makefile                 # Comandos de compilação e execução
-├── pom.xml                  # Configuração Maven
-└── README.md                # Este ficheiro
+│   └── Config.cfg           # System configuration
+├── Makefile                 # Build and execution commands
+├── pom.xml                  # Maven configuration
+└── README.md                # This file
 ```
 
 ---
 
-## Testes
+## Testing
 
-Para testar o sistema, pode usar URLs como:
-- `https://pt.wikipedia.org/wiki/Wikipédia:Página_principal`
+To test the system, you can use URLs such as:
+- `https://en.wikipedia.org/wiki/Main_Page`
 - `https://eden.dei.uc.pt/~rbarbosa/sd/`
-- Qualquer página web pública
+- Any public web page
 
 ---
 
-##  Resolução de Problemas
+## Troubleshooting
 
-### Erro: "Address already in use"
-- Verifique se algum componente já está em execução na mesma porta
-- Execute `make stop-all` e tente novamente
+### Error: "Address already in use"
+- Check whether a component is already running on the same port
+- Run `make stop-all` and try again
 
-### Erro: "Connection refused"
-- Certifique-se de que o Gateway está em execução antes dos outros componentes
-- Verifique as configurações de host/port no `Config.properties`
+### Error: "Connection refused"
+- Make sure the Gateway is running before the other components
+- Check the host and port settings in `Config.properties`
 
-### Barrels não sincronizam
-- Verifique se todos os barrels estão registados no Gateway
-- Confirme que as portas e hosts estão corretos
+### Barrels do not synchronize
+- Check that all barrels are registered with the Gateway
+- Confirm that the ports and hosts are correct
 
-### Stop words removem palavras importantes
-- O sistema aprende dinamicamente após 5000 páginas indexadas
-- Só remove palavras que são outliers em múltiplos ciclos consecutivos
+### Stop words remove important words
+- The system learns dynamically after 5,000 indexed pages
+- It only removes words that are outliers across multiple consecutive cycles
+
+---
+
+## Important Notes
+
+- **Persistence:** Indexes are automatically saved when barrels shut down
+- **Failover:** The system continues to operate even if a barrel fails
+- **Scalability:** Additional barrels and downloaders can be added dynamically
+- **Stop Words:** Stop words are discovered in a distributed manner using statistical analysis (IQR)
 
 ---
 
-## Notas Importantes
-
-- **Persistência:** Os índices são guardados automaticamente ao encerrar os barrels
-- **Failover:** O sistema continua a funcionar mesmo se um barrel falhar
-- **Escalabilidade:** Podem ser adicionados mais barrels e downloaders dinamicamente
-- **Stop Words:** São descobertas de forma distribuída usando análise estatística (IQR)
-
----
 ## Javadoc
 
-Para gerar e visualizar a documentação Javadoc do projeto:
+To generate and view the project's Javadoc documentation:
 
-### Gerar Javadoc
+### Generate Javadoc
 
-#### Usando Maven:
+#### Using Maven:
 ```bash
 mvn javadoc:javadoc
 ```
 
-### Para correr
+### Open the documentation
 ```bash
 cd target/reports/apidocs
 
-- MacOS/Linux 
-    open index.html
+# macOS/Linux
+open index.html
 
-- Windows
-    start index.html
+# Windows
+start index.html
 ```
+
 ---
-## Autores
+
+## Authors
 
 - Henrique Diz
 - Rodrigo Manão
@@ -380,8 +383,8 @@ cd target/reports/apidocs
 
 ---
 
-## Licença
+## License
 
-Projeto académico - Universidade de Coimbra
+Academic project - University of Coimbra
 
 ---
